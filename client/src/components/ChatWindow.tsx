@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Send } from 'lucide-react';
+import { useDoll } from '../contexts/DollContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -7,6 +8,7 @@ interface Message {
 }
 
 export default function ChatWindow() {
+  const { setSpeaking, setEmotion, updateState } = useDoll();
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: 'Hello! I am Echo, your AI companion. How can I help you today?' }
   ]);
@@ -14,12 +16,22 @@ export default function ChatWindow() {
 
   const handleSend = () => {
     if (!input.trim()) return;
+    
     setMessages([...messages, { role: 'user', content: input }]);
     setInput('');
-    // Mock response
+    
+    // Mock interaction flow
+    updateState({ isListening: false, emotion: 'thinking' });
+
     setTimeout(() => {
       setMessages(prev => [...prev, { role: 'assistant', content: "I'm processing your request..." }]);
-    }, 1000);
+      updateState({ isSpeaking: true, emotion: 'happy' });
+      
+      setTimeout(() => {
+        setSpeaking(false);
+        setEmotion('neutral');
+      }, 2000);
+    }, 1500);
   };
 
   return (
