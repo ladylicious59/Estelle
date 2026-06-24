@@ -67,22 +67,25 @@ Get status and details of a specific video generation.
 
 ## Subscriptions
 
-### GET `/subscriptions/me`
+### GET `/subscriptions/status?userId=id`
 Get current user's subscription status.
 **Response**:
 ```json
 {
-  "plan": "starter | pro | agency",
-  "status": "active | trialing | canceled | past_due"
+  "plan": "starter | pro | agency | none",
+  "status": "active | trialing | canceled | canceling | past_due | inactive",
+  "current_period_end": "ISO Date string | null"
 }
 ```
 
-### POST `/subscriptions/create-checkout-session`
+### POST `/subscriptions/create-checkout`
 Create a Stripe Checkout session for a specific plan.
 **Request Body**:
 ```json
 {
-  "plan": "starter | pro | agency"
+  "plan": "starter | pro | agency",
+  "userId": "string",
+  "userEmail": "string"
 }
 ```
 **Response**:
@@ -91,6 +94,29 @@ Create a Stripe Checkout session for a specific plan.
   "url": "string"
 }
 ```
+
+### POST `/subscriptions/cancel`
+Cancel the current subscription at the end of the period.
+**Request Body**:
+```json
+{
+  "userId": "string"
+}
+```
+**Response**:
+```json
+{
+  "message": "Subscription will be canceled at the end of the current period"
+}
+```
+
+## Webhooks
+
+### POST `/webhooks/stripe`
+Endpoint for Stripe events.
+- `checkout.session.completed`: Provision subscription.
+- `customer.subscription.updated`: Update subscription status/period.
+- `customer.subscription.deleted`: Mark subscription as canceled.
 
 ## Database Schema (SQLite)
 

@@ -9,10 +9,18 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 // Middleware
+app.use(express.json({
+    verify: (req, res, buf) => {
+        req.rawBody = buf;
+    }
+}));
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
-app.use(express.json());
+// Webhook route (must be before standard express.json() if you were using it differently, 
+// but here we integrated verify into express.json())
+import { handleStripeWebhook } from './controllers/webhookController.js';
+app.post('/api/webhooks/stripe', handleStripeWebhook);
 // API Routes
 app.use('/api', routes);
 // Basic health check

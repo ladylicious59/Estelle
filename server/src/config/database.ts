@@ -32,7 +32,7 @@ export const database = {
     db.prepare(`
       CREATE TABLE IF NOT EXISTS subscriptions (
         id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
+        user_id TEXT UNIQUE NOT NULL,
         stripe_customer_id TEXT,
         stripe_subscription_id TEXT,
         plan TEXT CHECK(plan IN ('starter', 'pro', 'agency')) NOT NULL,

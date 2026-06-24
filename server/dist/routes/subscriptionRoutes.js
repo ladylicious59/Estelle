@@ -1,10 +1,7 @@
 import { Router } from 'express';
-// import * as subscriptionController from '../controllers/subscriptionController.js';
+import * as subscriptionController from '../controllers/subscriptionController.js';
 const router = Router();
-router.get('/me', (req, res) => {
-    res.json({ plan: 'free', status: 'active' });
-});
-router.post('/create-checkout-session', (req, res) => {
-    res.json({ url: 'https://checkout.stripe.com/mock-session' });
-});
+router.get('/status', subscriptionController.getSubscriptionStatus);
+router.post('/create-checkout', subscriptionController.createCheckoutSession);
+router.post('/cancel', subscriptionController.cancelSubscription);
 export default router;
