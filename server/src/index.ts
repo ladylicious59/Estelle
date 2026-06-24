@@ -13,7 +13,7 @@ const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json({
-  verify: (req: any, res, buf) => {
+  verify: (req: any, res: any, buf: Buffer) => {
     req.rawBody = buf;
   }
 }));

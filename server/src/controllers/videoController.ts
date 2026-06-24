@@ -39,7 +39,7 @@ export const generateVideo = async (req: Request, res: Response) => {
 export const getVideoStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
 
-  if (!id) {
+  if (!id || typeof id !== 'string') {
     return res.status(400).json({ error: 'Video ID is required' });
   }
 
