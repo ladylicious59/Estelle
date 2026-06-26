@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Video, 
@@ -12,31 +12,54 @@ import {
   ChevronRight,
   LogOut
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
-const SidebarItem = ({ icon, label, to, active, collapsed }: { icon: React.ReactNode, label: string, to: string, active: boolean, collapsed: boolean }) => (
-  <Link 
-    to={to} 
-    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${
-      active 
-        ? 'bg-indigo-600 text-white' 
-        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-    }`}
-  >
-    <div className="shrink-0">{icon}</div>
-    {!collapsed && <span className="font-medium whitespace-nowrap">{label}</span>}
-    {active && !collapsed && <ChevronRight size={16} className="ml-auto" />}
-  </Link>
-);
+const SidebarItem = ({ icon, label, to, active, collapsed, onClick }: { icon: React.ReactNode, label: string, to?: string, active: boolean, collapsed: boolean, onClick?: () => void }) => {
+  const content = (
+    <>
+      <div className="shrink-0">{icon}</div>
+      {!collapsed && <span className="font-medium whitespace-nowrap">{label}</span>}
+      {active && !collapsed && <ChevronRight size={16} className="ml-auto" />}
+    </>
+  );
+
+  const className = `flex items-center gap-3 px-4 py-3 rounded-xl transition-all group w-full ${
+    active 
+      ? 'bg-indigo-600 text-white' 
+      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+  }`;
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={className}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link to={to || '#'} className={className}>
+      {content}
+    </Link>
+  );
+};
 
 const DashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const navItems = [
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard', to: '/dashboard' },
     { icon: <Video size={20} />, label: 'Create Video', to: '/dashboard/create' },
-    { icon: <Library size={20} />, label: 'My Videos', to: '/dashboard/videos' },
+    { icon: <Library size={20} />, label: 'My Videos', to: '/dashboard/library' },
     { icon: <Settings size={20} />, label: 'Settings', to: '/dashboard/settings' },
   ];
 
@@ -88,7 +111,7 @@ const DashboardLayout = () => {
             <SidebarItem 
               icon={<LogOut size={20} />} 
               label="Logout" 
-              to="/login" 
+              onClick={handleLogout}
               active={false}
               collapsed={collapsed}
             />
@@ -115,8 +138,8 @@ const DashboardLayout = () => {
             <div className="w-px h-6 bg-slate-800 mx-2"></div>
             <div className="flex items-center gap-3 pl-2">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium">Alex Smith</p>
-                <p className="text-xs text-slate-500">Pro Plan</p>
+                <p className="text-sm font-medium">{user?.name || user?.email.split('@')[0]}</p>
+                <p className="text-xs text-slate-500">Free Account</p>
               </div>
               <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700">
                 <User size={20} className="text-slate-400" />

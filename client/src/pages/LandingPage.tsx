@@ -1,8 +1,39 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Check, Video, MessageSquare, Zap, Shield, Smartphone } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Check, Video, MessageSquare, Zap, Shield, Smartphone, Loader2 } from 'lucide-react';
+import client from '../api/client';
+import { useAuth } from '../contexts/AuthContext';
 
 const LandingPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handleSubscribe = async (plan: string) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setLoadingPlan(plan);
+    try {
+      const response = await client.post('/subscriptions/create-checkout', {
+        plan,
+        userId: user.id,
+        userEmail: user.email
+      });
+      
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (err) {
+      console.error('Failed to create checkout session', err);
+      alert('Failed to start checkout. Please try again.');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
       {/* Navigation */}
@@ -16,10 +47,18 @@ const LandingPage = () => {
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
           <a href="#features" className="hover:text-white transition-colors">Features</a>
           <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-          <Link to="/login" className="hover:text-white transition-colors">Login</Link>
-          <Link to="/dashboard" className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg transition-all">
-            Get Started
-          </Link>
+          {user ? (
+            <Link to="/dashboard" className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg transition-all">
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" className="hover:text-white transition-colors">Login</Link>
+              <Link to="/signup" className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg transition-all">
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -119,13 +158,17 @@ const LandingPage = () => {
                   <Check size={18} className="text-indigo-500" /> Basic editing
                 </li>
               </ul>
-              <button className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 rounded-xl transition-all">
-                Get Started
+              <button 
+                onClick={() => handleSubscribe('starter')}
+                disabled={loadingPlan === 'starter'}
+                className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 rounded-xl transition-all flex justify-center"
+              >
+                {loadingPlan === 'starter' ? <Loader2 className="animate-spin" /> : 'Get Started'}
               </button>
             </div>
 
             {/* Pro */}
-            <div className="bg-slate-900 border-2 border-indigo-600 rounded-2xl p-8 flex flex-col text-left relative transform scale-105 shadow-2xl shadow-indigo-500/10">
+            <div className="bg-slate-900 border-2 border-indigo-600 rounded-2xl p-8 flex flex-col text-left relative transform md:scale-105 shadow-2xl shadow-indigo-500/10">
               <div className="absolute top-0 right-8 -translate-y-1/2 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">
                 Most Popular
               </div>
@@ -149,8 +192,12 @@ const LandingPage = () => {
                   <Check size={18} className="text-indigo-500" /> Priority processing
                 </li>
               </ul>
-              <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-all">
-                Go Pro Now
+              <button 
+                onClick={() => handleSubscribe('pro')}
+                disabled={loadingPlan === 'pro'}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-all flex justify-center"
+              >
+                {loadingPlan === 'pro' ? <Loader2 className="animate-spin" /> : 'Go Pro Now'}
               </button>
             </div>
 
@@ -176,8 +223,12 @@ const LandingPage = () => {
                   <Check size={18} className="text-indigo-500" /> Dedicated support
                 </li>
               </ul>
-              <button className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 rounded-xl transition-all">
-                Contact Sales
+              <button 
+                onClick={() => handleSubscribe('agency')}
+                disabled={loadingPlan === 'agency'}
+                className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 rounded-xl transition-all flex justify-center"
+              >
+                {loadingPlan === 'agency' ? <Loader2 className="animate-spin" /> : 'Contact Sales'}
               </button>
             </div>
           </div>
