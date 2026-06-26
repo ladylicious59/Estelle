@@ -17,7 +17,7 @@ Placeholder for user login.
 
 ## Videos
 
-### GET `/videos`
+### GET `/videos?userId=id`
 Retrieve all video generations for the authenticated user.
 **Response**:
 ```json
@@ -41,9 +41,10 @@ Trigger a new AI video generation.
 **Request Body**:
 ```json
 {
-  "avatar_id": "string",
-  "voice_id": "string",
-  "input_text": "string"
+  "userId": "string",
+  "avatarId": "string",
+  "voiceId": "string",
+  "inputText": "string"
 }
 ```
 **Response**:
