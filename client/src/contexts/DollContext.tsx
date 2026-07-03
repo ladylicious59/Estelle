@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useState, useEffect, type ReactNode } from 'react';
 import type { Emotion } from '../components/DollVisualization';
 
 interface DollState {
@@ -7,14 +7,14 @@ interface DollState {
   emotion: Emotion;
 }
 
-interface DollContextType extends DollState {
+export interface DollContextType extends DollState {
   setListening: (val: boolean) => void;
   setSpeaking: (val: boolean) => void;
   setEmotion: (val: Emotion) => void;
   updateState: (newState: Partial<DollState>) => void;
 }
 
-const DollContext = createContext<DollContextType | undefined>(undefined);
+export const DollContext = createContext<DollContextType | undefined>(undefined);
 
 export const DollProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<DollState>({
@@ -49,12 +49,4 @@ export const DollProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </DollContext.Provider>
   );
-};
-
-export const useDoll = () => {
-  const context = useContext(DollContext);
-  if (context === undefined) {
-    throw new Error('useDoll must be used within a DollProvider');
-  }
-  return context;
 };
