@@ -1,13 +1,12 @@
 {
-  "name": "talkhuman-ai",
-  "version": "1.0.0",
+  "name": "persona-ai",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "install:all": "npm install --prefix client && npm install --prefix server",
-    "build:client": "npm run build --prefix client",
-    "build:server": "npm run build --prefix server",
-    "build": "npm run build:client && npm run build:server",
-    "start": "npm run start --prefix server",
-    "postinstall": "npm run install:all"
+    "dev": "npm run dev -w apps/web & npm run dev -w apps/server",
+    "build": "npm run build -w apps/web & npm run build -w apps/server"
   }
 }
