@@ -41,6 +41,10 @@ export class Player {
   private staminaRegenTimer: number = 0;
   private isExhausted: boolean = false;
 
+  // HP
+  public hp: number = 100;
+  public maxHp: number = 100;
+
   // Dodge
   private isDodging: boolean = false;
   private dodgeTimer: number = 0;
@@ -476,6 +480,34 @@ export class Player {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
   };
+
+  // --- HP System ---
+
+  takeDamage(amount: number): void {
+    if (this.hp <= 0) return; // already dead
+
+    this.hp -= amount;
+    if (this.hp < 0) this.hp = 0;
+
+    console.log(`Player took ${amount} damage! HP: ${this.hp}/${this.maxHp}`);
+
+    if (this.hp <= 0) {
+      this.onDeath();
+    }
+  }
+
+  private onDeath(): void {
+    console.log('GAME OVER');
+    // Freeze all input
+    this.canMove = false;
+    this.canAct = false;
+    this.isDodging = false;
+    this.isInvulnerable = false;
+  }
+
+  isAlive(): boolean {
+    return this.hp > 0;
+  }
 
   public dispose(): void {
     this.combatController.dispose();
