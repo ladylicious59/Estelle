@@ -50,9 +50,7 @@ export class Game {
 
     // Player state logging
     this.player.setOnStateChange((oldState, newState) => {
-      if (this.stateLabel) {
-        this.stateLabel.textContent = newState.toUpperCase();
-      }
+      this.updateStateLabel();
     });
 
     // Resize handler
@@ -101,6 +99,19 @@ export class Game {
     } else {
       this.staminaFill.style.backgroundColor = '#FFD700';
       this.staminaFill.classList.remove('flashing');
+    }
+
+    // Update state label (combat takes priority)
+    this.updateStateLabel();
+  }
+
+  private updateStateLabel(): void {
+    if (!this.stateLabel) return;
+    const combatLabel = this.player.combatController.getCombatStateLabel();
+    if (combatLabel !== 'IDLE') {
+      this.stateLabel.textContent = combatLabel;
+    } else {
+      this.stateLabel.textContent = this.player.state.toUpperCase();
     }
   }
 

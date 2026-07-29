@@ -32,3 +32,22 @@ export const CAMERA_DEFAULT_OFFSET = { x: 0, y: 6, z: -8 };
 export const CAMERA_ZOOM_MIN = 3;
 export const CAMERA_ZOOM_MAX = 15;
 export const CAMERA_LERP_FACTOR = 0.1;
+
+// Player
+export const PLAYER_MAX_HP = 100;
+
+// Combat — Light Attack
+export const LIGHT_ATTACK_DAMAGE: number[] = [15, 18, 25];
+export const LIGHT_ATTACK_DURATION: number[] = [0.3, 0.4, 0.6];
+export const LIGHT_ATTACK_RANGE: number[] = [3.0, 3.0, 3.5];
+export const LIGHT_ATTACK_ARC: number[] = [60, 90, 120];
+
+// Combat — Heavy Attack
+export const HEAVY_ATTACK_DAMAGE = 40;
+export const HEAVY_ATTACK_DURATION = 0.8;
+export const HEAVY_ATTACK_RANGE = 4.0;
+export const HEAVY_ATTACK_ARC = 40;
+export const HEAVY_ATTACK_STAMINA_COST = 30;
+
+// Combat — Combo
+export const COMBO_WINDOW = 0.8;

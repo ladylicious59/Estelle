@@ -8,6 +8,7 @@ import {
   GRAVITY, JUMP_HEIGHT,
   CAMERA_DEFAULT_OFFSET, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX, CAMERA_LERP_FACTOR,
 } from '../utils/constants';
+import { CombatController } from '../combat/CombatController';
 
 export type PlayerState = 'idle' | 'walk' | 'run' | 'sprint' | 'jump' | 'dodge';
 
@@ -30,6 +31,11 @@ export class Player {
   public state: PlayerState = 'idle';
   private previousState: PlayerState = 'idle';
 
+  // Combat integration
+  public canMove: boolean = true;
+  public canAct: boolean = true;
+  public combatController: CombatController;
+
   // Stamina
   public stamina: number = STAMINA_MAX;
   private staminaRegenTimer: number = 0;
@@ -51,7 +57,7 @@ export class Player {
   public camera: THREE.PerspectiveCamera;
   private cameraTarget: THREE.Vector3 = new THREE.Vector3();
   private cameraDistance: number = 8;
-  private cameraYaw: number = 0; // horizontal angle in radians
+  public cameraYaw: number = 0; // horizontal angle in radians
   private cameraPitch: number = 0.4; // slight downward angle
   private isOrbiting: boolean = false;
   private isRightMouseDown: boolean = false;
@@ -81,6 +87,9 @@ export class Player {
       200
     );
     this.resetCameraPosition();
+
+    // Combat controller
+    this.combatController = new CombatController(this, scene);
 
     // Input listeners
     this.setupInput();
@@ -163,11 +172,6 @@ export class Player {
         this.isRightMouseDown = true;
         this.isOrbiting = true;
       }
-      // Right-click also triggers dodge
-      if (e.button === 2) {
-        const dir = this.getCurrentMovementDirection();
-        this.startDodge(dir);
-      }
     });
 
     window.addEventListener('mouseup', (e) => {
@@ -220,6 +224,7 @@ export class Player {
 
   private startDodge(direction: string): void {
     if (this.isDodging) return;
+    if (!this.canAct) return;
     if (this.dodgeCooldownTimer > 0) return;
     if (this.stamina < STAMINA_DODGE_COST) return;
 
@@ -264,9 +269,12 @@ export class Player {
     // Clamp delta to avoid huge jumps
     const dt = Math.min(deltaTime, 0.1);
 
+    // Update combat controller
+    this.combatController.update(dt);
+
     if (this.isDodging) {
       this.updateDodge(dt);
-    } else {
+    } else if (this.canMove) {
       this.updateMovement(dt);
     }
 
@@ -470,6 +478,7 @@ export class Player {
   };
 
   public dispose(): void {
+    this.combatController.dispose();
     window.removeEventListener('resize', this.onResize);
   }
 }
