@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Player } from '../player/Player';
+import { Goblin } from '../enemies/Goblin';
 import {
   LIGHT_ATTACK_DAMAGE,
   LIGHT_ATTACK_DURATION,
@@ -44,6 +45,14 @@ export class CombatController {
 
   // --- Active visual effects ---
   private effects: ActiveEffect[] = [];
+
+  // --- Goblin tracking for hit detection ---
+  private goblins: Goblin[] = [];
+  private goblinsHitThisAttack: Set<Goblin> = new Set();
+  private currentAttackDamage: number = 0;
+  private currentAttackRange: number = 0;
+  private currentAttackArc: number = 0;
+  private hasCheckedHits: boolean = false;
 
   // --- Input flags (set by listeners, cleared each frame after processing) ---
   private lightAttackRequested: boolean = false;
@@ -91,6 +100,58 @@ export class CombatController {
     // Default: player's camera forward
     return new THREE.Vector3(0, 0, -1)
       .applyAxisAngle(new THREE.Vector3(0, 1, 0), this.player.cameraYaw);
+  }
+
+  /** Register active goblins for hit detection */
+  setGoblins(goblins: Goblin[]): void {
+    this.goblins = goblins;
+  }
+
+  /** Check if any goblins are within attack range and arc; apply damage */
+  private checkGoblinHits(): void {
+    if (this.hasCheckedHits) return;
+    if (this.goblins.length === 0) return;
+
+    this.hasCheckedHits = true;
+
+    const attackOrigin = this.player.position.clone();
+    attackOrigin.y = 1.0; // waist height
+    const attackDir = this.getAttackDirection();
+
+    for (const goblin of this.goblins) {
+      if (!goblin.isAlive) continue;
+      if (this.goblinsHitThisAttack.has(goblin)) continue;
+
+      const goblinPos = goblin.positionVec.clone();
+      goblinPos.y = 0.5; // approximate center
+
+      const toGoblin = new THREE.Vector3().subVectors(goblinPos, attackOrigin);
+      toGoblin.y = 0; // check on XZ plane
+      const distance = toGoblin.length();
+
+      // Range check
+      if (distance > this.currentAttackRange) continue;
+
+      // Angle check (dot product)
+      toGoblin.normalize();
+      const dot = attackDir.dot(toGoblin);
+      const halfArcRad = (this.currentAttackArc / 2) * (Math.PI / 180);
+      const minDot = Math.cos(halfArcRad);
+
+      if (dot >= minDot) {
+        // Hit!
+        this.goblinsHitThisAttack.add(goblin);
+
+        // Knockback direction: away from player
+        const knockDir = toGoblin.clone();
+
+        goblin.takeDamage(this.currentAttackDamage, knockDir);
+        console.log(
+          `Hit goblin for ${this.currentAttackDamage} damage! ` +
+          `(dist: ${distance.toFixed(1)}, arc: ${this.currentAttackArc}°)`,
+        );
+      }
+    }
   }
 
   update(deltaTime: number): void {
@@ -186,6 +247,13 @@ export class CombatController {
     const range = LIGHT_ATTACK_RANGE[step];
     const dmg = LIGHT_ATTACK_DAMAGE[step];
 
+    // Set hit detection params
+    this.currentAttackDamage = dmg;
+    this.currentAttackRange = range;
+    this.currentAttackArc = arcDeg;
+    this.hasCheckedHits = false;
+    this.goblinsHitThisAttack.clear();
+
     console.log(`Light Attack ${step + 1} — ${dmg} dmg`);
 
     // Spawn swing arc visual
@@ -194,6 +262,12 @@ export class CombatController {
 
   private updateLightAttack(dt: number): void {
     this.lightAttackTimer -= dt;
+
+    // Check hits at mid-frame (~50% through attack)
+    const totalDuration = LIGHT_ATTACK_DURATION[this.lightComboStep];
+    if (this.lightAttackTimer <= totalDuration * 0.5) {
+      this.checkGoblinHits();
+    }
 
     // Update effect opacities proportionally
     // (handled in updateEffects)
@@ -225,6 +299,13 @@ export class CombatController {
     this.isHeavyWindup = true;
     this.heavyAttackTimer = HEAVY_ATTACK_DURATION;
 
+    // Set hit detection params
+    this.currentAttackDamage = HEAVY_ATTACK_DAMAGE;
+    this.currentAttackRange = HEAVY_ATTACK_RANGE;
+    this.currentAttackArc = HEAVY_ATTACK_ARC;
+    this.hasCheckedHits = false;
+    this.goblinsHitThisAttack.clear();
+
     // Spawn windup indicator (growing sphere near player)
     this.spawnWindupIndicator();
 
@@ -253,6 +334,9 @@ export class CombatController {
 
         // Remove windup indicator
         this.removeWindupIndicator();
+
+        // Check hits on strike
+        this.checkGoblinHits();
 
         // Spawn strike arc
         this.spawnSwingArc(HEAVY_ATTACK_ARC, HEAVY_ATTACK_RANGE, 0.4, '#FF4422');
