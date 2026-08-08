@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Player } from '../player/Player';
 import { Goblin } from '../enemies/Goblin';
+import { DamageNumbers } from '../ui/DamageNumbers';
 import {
   LIGHT_ATTACK_DAMAGE,
   LIGHT_ATTACK_DURATION,
@@ -145,7 +146,10 @@ export class CombatController {
         // Knockback direction: away from player
         const knockDir = toGoblin.clone();
 
+        const hitPosition = goblin.positionVec.clone();
+        hitPosition.y = 1.25;
         goblin.takeDamage(this.currentAttackDamage, knockDir);
+        DamageNumbers.show(hitPosition, this.currentAttackDamage, this.isHeavyStriking);
         console.log(
           `Hit goblin for ${this.currentAttackDamage} damage! ` +
           `(dist: ${distance.toFixed(1)}, arc: ${this.currentAttackArc}°)`,

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Player } from '../player/Player';
+import { DamageNumbers } from '../ui/DamageNumbers';
 
 export type GoblinState = 'idle' | 'patrol' | 'chase' | 'attack' | 'hurt' | 'death';
 
@@ -33,6 +34,9 @@ export class Goblin {
   private player: Player;
   private scene: THREE.Scene;
   private position: THREE.Vector3;
+  private hpBar!: THREE.Group;
+  private hpFill!: THREE.Mesh;
+  private hpBarBackground!: THREE.Mesh;
 
   // Body parts for animation
   private bodyParts: {
@@ -91,6 +95,7 @@ export class Goblin {
 
     this.mesh = new THREE.Group();
     this.bodyParts = this.buildModel();
+    this.createHealthBar();
     this.mesh.position.copy(this.position);
     scene.add(this.mesh);
 
@@ -160,6 +165,36 @@ export class Goblin {
     this.mesh.add(rightLeg);
 
     return { body, head, leftArm, rightArm, leftLeg, rightLeg };
+  }
+
+  private createHealthBar(): void {
+    this.hpBar = new THREE.Group();
+    this.hpBar.position.set(0, 1.65, 0);
+    this.hpBar.renderOrder = 1000;
+
+    const backgroundGeo = new THREE.PlaneGeometry(1, 0.1);
+    const backgroundMat = new THREE.MeshBasicMaterial({ color: '#220909', transparent: true, opacity: 0.9, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
+    this.hpBarBackground = new THREE.Mesh(backgroundGeo, backgroundMat);
+    this.hpBarBackground.renderOrder = 1000;
+    this.hpBar.add(this.hpBarBackground);
+
+    const fillGeo = new THREE.PlaneGeometry(1, 0.1);
+    const fillMat = new THREE.MeshBasicMaterial({ color: '#44CC44', transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
+    this.hpFill = new THREE.Mesh(fillGeo, fillMat);
+    this.hpFill.position.z = -0.006;
+    this.hpFill.renderOrder = 1001;
+    this.hpBar.add(this.hpFill);
+    this.mesh.add(this.hpBar);
+  }
+
+  private updateHealthBar(): void {
+    const ratio = Math.max(0, Math.min(1, this.hp / this.maxHp));
+    this.hpBar.visible = ratio < 1 && (this.alive || this.state === 'death');
+    this.hpFill.scale.x = ratio;
+    this.hpFill.position.x = -(1 - ratio) * 0.5;
+    const color = ratio < 0.25 ? '#FF3333' : ratio < 0.5 ? '#FFCC00' : '#44CC44';
+    (this.hpFill.material as THREE.MeshBasicMaterial).color.set(color);
+    if (this.player.camera) this.hpBar.lookAt(this.player.camera.position);
   }
 
   /** Get the goblin's world position */
@@ -324,8 +359,9 @@ export class Goblin {
         break;
     }
 
-    // Sync mesh position
+    // Sync mesh position and update billboard UI every frame
     this.mesh.position.copy(this.position);
+    this.updateHealthBar();
   }
 
   private updateIdle(dt: number): void {
@@ -507,6 +543,7 @@ export class Goblin {
 
     if (this.isPlayerInAttackArc()) {
       this.player.takeDamage(this.attackDamage);
+      DamageNumbers.show(this.player.position.clone().add(new THREE.Vector3(0, 1.8, 0)), this.attackDamage, false);
       console.log(`Goblin ${this.attackType} hits player for ${this.attackDamage} damage!`);
       // Trigger screen flash
       this.triggerScreenFlash();

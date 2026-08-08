@@ -101,6 +101,32 @@
       transition: background 0s;
     }
 
+    /* Combat indicator */
+    #combat-indicator {
+      position: absolute;
+      top: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #FF3333;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 5px #260000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 12;
+    }
+
+    #combat-indicator.combat-active {
+      opacity: 1;
+      animation: combat-pulse 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes combat-pulse {
+      from { transform: translateX(-50%) scale(1); }
+      to { transform: translateX(-50%) scale(1.08); }
+    }
+
     /* Controls hint */
     #controls-hint {
       position: absolute;
@@ -122,6 +148,7 @@
 <body>
   <div id="app">
     <div id="damage-flash"></div>
+    <div id="combat-indicator">⚔ COMBAT</div>
     <div id="controls-hint">
       WASD = Move &bull; Shift = Sprint &bull; Space = Jump &bull; Double-tap = Dodge &bull; Scroll = Zoom &bull; LMB = Light Atk &bull; RMB/E = Heavy Atk &bull; Tab = Lock-On
     </div>

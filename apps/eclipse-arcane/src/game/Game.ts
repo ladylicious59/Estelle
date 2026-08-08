@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Player } from '../player/Player';
 import { Village } from '../world/Village';
 import { Goblin } from '../enemies/Goblin';
+import { DamageNumbers } from '../ui/DamageNumbers';
 
 export class Game {
   private scene: THREE.Scene;
@@ -19,6 +20,7 @@ export class Game {
   private hpBar: HTMLElement;
   private hpFill: HTMLElement;
   private hpLabel: HTMLElement;
+  private combatIndicator: HTMLElement;
 
   constructor() {
     // Scene
@@ -61,6 +63,8 @@ export class Game {
     this.hpBar = document.getElementById('hp-bar')!;
     this.hpFill = document.getElementById('hp-fill')!;
     this.hpLabel = document.getElementById('hp-label')!;
+    this.combatIndicator = document.getElementById('combat-indicator')!;
+    DamageNumbers.initialize(this.player.camera);
 
     // Player state logging
     this.player.setOnStateChange((oldState, newState) => {
@@ -94,8 +98,9 @@ export class Game {
         goblin.update(deltaTime);
       }
 
-      // Update UI
+      // Update UI and floating combat feedback
       this.updateUI();
+      DamageNumbers.update(deltaTime);
 
       // Render from player camera
       this.renderer.render(this.scene, this.player.camera);
@@ -122,6 +127,10 @@ export class Game {
 
     // Update state label (combat takes priority)
     this.updateStateLabel();
+    if (this.combatIndicator) {
+      const inCombat = this.goblins.some((goblin) => goblin.isAlive && (goblin.state === 'chase' || goblin.state === 'attack'));
+      this.combatIndicator.classList.toggle('combat-active', inCombat);
+    }
 
     // HP bar
     if (this.hpFill) {
@@ -192,6 +201,7 @@ export class Game {
     if (this.animFrameId) {
       cancelAnimationFrame(this.animFrameId);
     }
+    DamageNumbers.dispose();
     this.player.dispose();
     for (const goblin of this.goblins) {
       goblin.dispose();
