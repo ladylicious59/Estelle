@@ -103,6 +103,16 @@ export class CombatController {
       .applyAxisAngle(new THREE.Vector3(0, 1, 0), this.player.cameraYaw);
   }
 
+  /** World position of the lock-on reticle (grounded), or null when not locked on. */
+  getLockOnTargetPosition(): THREE.Vector3 | null {
+    if (this.isLockedOn && this.lockOnReticle) {
+      const pos = this.lockOnReticle.position.clone();
+      pos.y = 0;
+      return pos;
+    }
+    return null;
+  }
+
   /** Register active goblins for hit detection */
   setGoblins(goblins: Goblin[]): void {
     this.goblins = goblins;

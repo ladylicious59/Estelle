@@ -7,8 +7,10 @@ import {
   DODGE_DISTANCE, DODGE_DURATION, DODGE_IFRAMES, DODGE_COOLDOWN,
   GRAVITY, JUMP_HEIGHT,
   CAMERA_DEFAULT_OFFSET, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX, CAMERA_LERP_FACTOR,
+  PLAYER_MAX_MANA, MANA_REGEN_RATE,
 } from '../utils/constants';
 import { CombatController } from '../combat/CombatController';
+import { FireMagic } from '../magic/FireMagic';
 
 export type PlayerState = 'idle' | 'walk' | 'run' | 'sprint' | 'jump' | 'dodge';
 
@@ -35,6 +37,7 @@ export class Player {
   public canMove: boolean = true;
   public canAct: boolean = true;
   public combatController: CombatController;
+  public fireMagic: FireMagic;
 
   // Stamina
   public stamina: number = STAMINA_MAX;
@@ -44,6 +47,10 @@ export class Player {
   // HP
   public hp: number = 100;
   public maxHp: number = 100;
+
+  // Mana
+  public mana: number = PLAYER_MAX_MANA;
+  public maxMana: number = PLAYER_MAX_MANA;
 
   // Dodge
   private isDodging: boolean = false;
@@ -94,6 +101,9 @@ export class Player {
 
     // Combat controller
     this.combatController = new CombatController(this, scene);
+
+    // Fire magic controller
+    this.fireMagic = new FireMagic(this, scene);
 
     // Input listeners
     this.setupInput();
@@ -276,10 +286,18 @@ export class Player {
     // Update combat controller
     this.combatController.update(dt);
 
+    // Update fire magic (spells, VFX, projectiles)
+    this.fireMagic.update(dt);
+
     if (this.isDodging) {
       this.updateDodge(dt);
     } else if (this.canMove) {
       this.updateMovement(dt);
+    }
+
+    // Mana regen: 8/sec whenever below max
+    if (this.mana < this.maxMana) {
+      this.mana = Math.min(this.maxMana, this.mana + MANA_REGEN_RATE * dt);
     }
 
     // Stamina regen
@@ -468,8 +486,29 @@ export class Player {
     return this.stamina / STAMINA_MAX;
   }
 
+  public getManaPercent(): number {
+    return this.mana / this.maxMana;
+  }
+
+  /** Try to spend mana. Returns false if there isn't enough. */
+  useMana(amount: number): boolean {
+    if (this.mana < amount) return false;
+    this.mana -= amount;
+    return true;
+  }
+
   public isPlayerInvulnerable(): boolean {
     return this.isInvulnerable;
+  }
+
+  /** Set/reset invulnerability (used by Phoenix Dash i-frames). */
+  setInvulnerable(invulnerable: boolean): void {
+    this.isInvulnerable = invulnerable;
+  }
+
+  /** Whether the player is mid-dodge (spells are blocked while dodging). */
+  get isDodgingNow(): boolean {
+    return this.isDodging;
   }
 
   public setOnStateChange(cb: (oldState: PlayerState, newState: PlayerState) => void): void {
@@ -511,6 +550,7 @@ export class Player {
 
   public dispose(): void {
     this.combatController.dispose();
+    this.fireMagic.dispose();
     window.removeEventListener('resize', this.onResize);
   }
 }

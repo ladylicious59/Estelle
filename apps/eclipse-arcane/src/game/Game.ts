@@ -20,6 +20,8 @@ export class Game {
   private hpBar: HTMLElement;
   private hpFill: HTMLElement;
   private hpLabel: HTMLElement;
+  private manaFill: HTMLElement;
+  private manaLabel: HTMLElement;
   private combatIndicator: HTMLElement;
 
   constructor() {
@@ -53,8 +55,9 @@ export class Game {
     // Spawn goblins
     this.spawnGoblins();
 
-    // Pass goblins to combat controller
+    // Pass goblins to combat + magic controllers
     this.player.combatController.setGoblins(this.goblins);
+    this.player.fireMagic.setGoblins(this.goblins);
 
     // UI
     this.staminaBar = document.getElementById('stamina-bar')!;
@@ -63,6 +66,8 @@ export class Game {
     this.hpBar = document.getElementById('hp-bar')!;
     this.hpFill = document.getElementById('hp-fill')!;
     this.hpLabel = document.getElementById('hp-label')!;
+    this.manaFill = document.getElementById('mana-fill')!;
+    this.manaLabel = document.getElementById('mana-label')!;
     this.combatIndicator = document.getElementById('combat-indicator')!;
     DamageNumbers.initialize(this.player.camera);
 
@@ -146,6 +151,34 @@ export class Game {
     }
     if (this.hpLabel) {
       this.hpLabel.textContent = `${this.player.hp}/${this.player.maxHp}`;
+    }
+
+    // Mana bar
+    if (this.manaFill) {
+      const manaPct = this.player.getManaPercent();
+      this.manaFill.style.width = `${manaPct * 100}%`;
+      if (manaPct < 0.25) {
+        this.manaFill.style.backgroundColor = '#3344CC';
+      } else {
+        this.manaFill.style.backgroundColor = '#4488FF';
+      }
+    }
+    if (this.manaLabel) {
+      this.manaLabel.textContent = `MP: ${Math.floor(this.player.mana)}/${this.player.maxMana}`;
+    }
+
+    // Spell cooldown indicators
+    for (const spell of this.player.fireMagic.getSpellStatuses()) {
+      const statusEl = document.getElementById(`spell-status-${spell.id}`);
+      const slotEl = document.getElementById(`spell-slot-${spell.id}`);
+      if (!statusEl || !slotEl) continue;
+      if (spell.cooldown > 0) {
+        statusEl.textContent = `${spell.cooldown.toFixed(1)}s`;
+        slotEl.classList.add('on-cooldown');
+      } else {
+        statusEl.textContent = '✓';
+        slotEl.classList.remove('on-cooldown');
+      }
     }
   }
 
