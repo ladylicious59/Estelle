@@ -23,11 +23,12 @@ export class DamageNumbers {
     }
   }
 
-  static show(position: THREE.Vector3, amount: number, isHeavy: boolean): void {
+  static show(position: THREE.Vector3, amount: number, isHeavy: boolean, color?: string): void {
     if (!this.container || !this.camera) return;
     const element = document.createElement('div');
     element.textContent = `${Math.round(amount)}`;
-    element.style.cssText = `position:absolute;transform:translate(-50%,-50%);font:bold 700 22px 'Segoe UI',sans-serif;color:${isHeavy ? '#FFCC00' : '#FF3333'};text-shadow:0 2px 4px #160606, 0 0 8px rgba(0,0,0,.8);will-change:left,top,opacity;`;
+    const textColor = color ?? (isHeavy ? '#FFCC00' : '#FF3333');
+    element.style.cssText = `position:absolute;transform:translate(-50%,-50%);font:bold 700 22px 'Segoe UI',sans-serif;color:${textColor};text-shadow:0 2px 4px #160606, 0 0 8px rgba(0,0,0,.8);will-change:left,top,opacity;`;
     this.container.appendChild(element);
     this.numbers.push({ element, position: position.clone(), elapsed: 0 });
   }

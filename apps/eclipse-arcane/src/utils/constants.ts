@@ -51,3 +51,53 @@ export const HEAVY_ATTACK_STAMINA_COST = 30;
 
 // Combat — Combo
 export const COMBO_WINDOW = 0.8;
+
+// World bounds (matches player movement clamp)
+export const WORLD_BOUNDS = 40;
+
+// Magic — Mana
+export const PLAYER_MAX_MANA = 100;
+export const MANA_REGEN_RATE = 8; // per second
+
+// Magic — Spell mana costs
+export const FIREBOLT_MANA = 12;
+export const FLAME_WAVE_MANA = 25;
+export const INFERNO_MANA = 40;
+export const PHOENIX_DASH_MANA = 30;
+
+// Magic — Spell cooldowns (seconds)
+export const FIREBOLT_COOLDOWN = 2;
+export const FLAME_WAVE_COOLDOWN = 5;
+export const INFERNO_COOLDOWN = 8;
+export const PHOENIX_DASH_COOLDOWN = 6;
+
+// Firebolt
+export const FIREBOLT_DAMAGE = 25;
+export const FIREBOLT_PROJECTILE_SPEED = 25; // units/sec
+export const FIREBOLT_RANGE = 30; // max travel distance
+export const FIREBOLT_PROJECTILE_RADIUS = 0.3;
+export const FIREBOLT_EXPLOSION_RADIUS = 1.0; // VFX burst radius
+export const FIREBOLT_HIT_RADIUS = 2.0; // goblin hit detection radius
+
+// Flame Wave
+export const FLAME_WAVE_DAMAGE = 35;
+export const FLAME_WAVE_RANGE = 6; // cone length
+export const FLAME_WAVE_ARC_DEG = 60; // cone spread
+export const FLAME_WAVE_EXTEND_DURATION = 0.4; // cone extends over this time
+
+// Inferno
+export const INFERNO_DAMAGE_PER_SEC = 15;
+export const INFERNO_RADIUS = 3; // ground circle radius
+export const INFERNO_DURATION = 5; // seconds active
+export const INFERNO_FADE_DURATION = 1; // seconds to fade out after duration
+export const INFERNO_CAST_RANGE = 6; // target position ahead of player
+
+// Phoenix Dash
+export const PHOENIX_DASH_DAMAGE = 30;
+export const PHOENIX_DASH_DISTANCE = 10;
+export const PHOENIX_DASH_DURATION = 0.3;
+export const PHOENIX_DASH_AOE_RADIUS = 2.5; // arrival damage radius
+export const PHOENIX_ARRIVAL_EXPLOSION_RADIUS = 2.0; // VFX burst radius
+
+// Global particle budget (across all spells)
+export const MAX_ACTIVE_PARTICLES = 50;
