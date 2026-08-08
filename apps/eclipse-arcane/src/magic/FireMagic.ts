@@ -703,7 +703,7 @@ export class FireMagic {
     if (!this.dash) return;
     const d = this.dash;
     d.timer -= dt;
-    const progress = 1 - d.timer / d.duration;
+    const progress = Math.max(0, Math.min(1, 1 - d.timer / d.duration));
 
     // Move the player along the dash path
     this.player.position.copy(d.startPos).lerp(d.arrivalPos, progress);

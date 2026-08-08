@@ -76,6 +76,9 @@ export class Game {
       this.updateStateLabel();
     });
 
+    // Dev hook: expose the game for console debugging (e.g. `window.__game.player.position`)
+    (window as unknown as Record<string, unknown>).__game = this;
+
     // Resize handler
     window.addEventListener('resize', this.onResize);
   }
