@@ -3,6 +3,11 @@ import { Player } from '../player/Player';
 import { Village } from '../world/Village';
 import { Goblin } from '../enemies/Goblin';
 import { DamageNumbers } from '../ui/DamageNumbers';
+import { NpcManager } from '../npc/NpcManager';
+import { buildCaptainRennModel } from '../npc/models';
+import { CAPTAIN_RENN_TREE } from '../dialogue/data/renn';
+import { DialogueController } from '../dialogue/DialogueController';
+import { GameFlags } from '../state/GameFlags';
 
 export class Game {
   private scene: THREE.Scene;
@@ -12,6 +17,11 @@ export class Game {
   private clock: THREE.Clock;
   private animFrameId: number = 0;
   private goblins: Goblin[] = [];
+
+  // NPCs & dialogue
+  public npcs: NpcManager;
+  public flags: GameFlags;
+  public dialogue: DialogueController;
 
   // UI elements
   private staminaBar: HTMLElement;
@@ -59,6 +69,16 @@ export class Game {
     this.player.combatController.setGoblins(this.goblins);
     this.player.fireMagic.setGoblins(this.goblins);
 
+    // Game state (quests, unlocked elements) that dialogue reads from
+    this.flags = new GameFlags();
+
+    // NPCs
+    this.npcs = new NpcManager(this.scene);
+    this.spawnNpcs();
+
+    // Dialogue: proximity prompt + conversation UI
+    this.dialogue = new DialogueController(this.npcs, this.player, this.flags);
+
     // UI
     this.staminaBar = document.getElementById('stamina-bar')!;
     this.staminaFill = document.getElementById('stamina-fill')!;
@@ -100,6 +120,9 @@ export class Game {
 
       // Update village (smoke animations)
       this.village.update(deltaTime);
+
+      // Update NPCs, proximity prompt and the dialogue box
+      this.dialogue.update(deltaTime);
 
       // Update goblins
       for (const goblin of this.goblins) {
@@ -195,6 +218,23 @@ export class Game {
     }
   }
 
+  /**
+   * Captain Renn keeps his post at the north gate (Emberwood dialogue doc 1.4),
+   * leaning on the watch post with the quest board a few paces away.
+   */
+  private spawnNpcs(): void {
+    this.npcs.add({
+      id: 'captain_renn',
+      name: 'Captain Renn',
+      promptLabel: 'Captain Renn',
+      position: new THREE.Vector3(2.5, 0, 19.8),
+      restYaw: Math.PI, // looking back down the north road
+      interactionRadius: 3.8,
+      dialogue: CAPTAIN_RENN_TREE,
+      buildModel: buildCaptainRennModel,
+    });
+  }
+
   private spawnGoblins(): void {
     // Goblin 1: near north path, patrol state with 2 waypoints
     const goblin1 = new Goblin(
@@ -238,6 +278,8 @@ export class Game {
       cancelAnimationFrame(this.animFrameId);
     }
     DamageNumbers.dispose();
+    this.dialogue.dispose();
+    this.npcs.dispose();
     this.player.dispose();
     for (const goblin of this.goblins) {
       goblin.dispose();
