@@ -353,13 +353,13 @@ export class Village {
   }
 
   private buildNpCs(): void {
-    // 5 NPC markers as colored cylinders
-    this.createNpcMarker(0, 0, -10, '#FF6B6B', 'Greta — Blacksmith'); // near forge area, actually let me put them at correct locations
+    // Placeholder markers for the NPCs that don't have dialogue yet.
+    // Captain Renn is a real, talkable NPC (see src/npc/) placed by Game.ts,
+    // so he is intentionally not marked here.
     this.createNpcMarker(18, 0, -5, '#FF6B6B', 'Greta — Blacksmith'); // Greta at forge
     this.createNpcMarker(0, 0, 0, '#4ECDC4', 'Milo — Merchant'); // Milo in center
     this.createNpcMarker(-18, 0, -5, '#FFE66D', 'Elder Miren — Healer'); // Elder at shrine
-    this.createNpcMarker(3, 0, 18, '#95E1D3', 'Captain Renn — Quest Giver'); // Captain at post
-    this.createNpcMarker(-2, 0, -6, '#DDA0DD', 'Old Thom — Lore NPC'); // Thom near fountain
+    this.createNpcMarker(-2, 0, -6, '#DDA0DD', 'Old Thom — Lore NPC'); // Thom near well
   }
 
   private createNpcMarker(x: number, y: number, z: number, color: string, label: string): void {

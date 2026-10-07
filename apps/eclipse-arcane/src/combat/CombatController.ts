@@ -219,6 +219,7 @@ export class CombatController {
   // --- Input handlers ---
 
   private handleMouseDown(e: MouseEvent): void {
+    if (this.player.uiInputLocked) return; // dialogue/menu owns the mouse
     if (e.button === 0) {
       // Left click — light attack
       this.lightAttackRequested = true;
@@ -229,6 +230,7 @@ export class CombatController {
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
+    if (this.player.uiInputLocked) return; // dialogue/menu owns the keyboard
     // Tab: toggle lock-on
     if (e.code === 'Tab') {
       e.preventDefault();
