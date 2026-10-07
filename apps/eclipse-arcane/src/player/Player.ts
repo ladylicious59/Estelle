@@ -36,6 +36,12 @@ export class Player {
   // Combat integration
   public canMove: boolean = true;
   public canAct: boolean = true;
+  /**
+   * Set while a full-screen UI (dialogue, later menus) owns the keyboard and
+   * mouse. Combat / spell / camera handlers check this at event time so a click
+   * that closes a dialogue can never also fire an attack.
+   */
+  public uiInputLocked: boolean = false;
   public combatController: CombatController;
   public fireMagic: FireMagic;
 
@@ -182,6 +188,7 @@ export class Player {
 
     // Camera orbit: right-click drag
     window.addEventListener('mousedown', (e) => {
+      if (this.uiInputLocked) return;
       if (e.button === 2) {
         this.isRightMouseDown = true;
         this.isOrbiting = true;

@@ -152,6 +152,7 @@ export class FireMagic {
     this.particles = new FireParticleSystem(scene);
 
     this.onKeyDown = (e: KeyboardEvent): void => {
+      if (this.player.uiInputLocked) return; // dialogue/menu owns the keyboard
       switch (e.code) {
         case 'Digit1':
           this.castFirebolt();
