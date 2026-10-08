@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Player } from '../player/Player';
 import { Goblin } from '../enemies/Goblin';
+import { DamageNumbers } from '../ui/DamageNumbers';
 import {
   LIGHT_ATTACK_DAMAGE,
   LIGHT_ATTACK_DURATION,
@@ -102,6 +103,16 @@ export class CombatController {
       .applyAxisAngle(new THREE.Vector3(0, 1, 0), this.player.cameraYaw);
   }
 
+  /** World position of the lock-on reticle (grounded), or null when not locked on. */
+  getLockOnTargetPosition(): THREE.Vector3 | null {
+    if (this.isLockedOn && this.lockOnReticle) {
+      const pos = this.lockOnReticle.position.clone();
+      pos.y = 0;
+      return pos;
+    }
+    return null;
+  }
+
   /** Register active goblins for hit detection */
   setGoblins(goblins: Goblin[]): void {
     this.goblins = goblins;
@@ -145,7 +156,10 @@ export class CombatController {
         // Knockback direction: away from player
         const knockDir = toGoblin.clone();
 
+        const hitPosition = goblin.positionVec.clone();
+        hitPosition.y = 1.25;
         goblin.takeDamage(this.currentAttackDamage, knockDir);
+        DamageNumbers.show(hitPosition, this.currentAttackDamage, this.isHeavyStriking);
         console.log(
           `Hit goblin for ${this.currentAttackDamage} damage! ` +
           `(dist: ${distance.toFixed(1)}, arc: ${this.currentAttackArc}°)`,
@@ -205,6 +219,7 @@ export class CombatController {
   // --- Input handlers ---
 
   private handleMouseDown(e: MouseEvent): void {
+    if (this.player.uiInputLocked) return; // dialogue/menu owns the mouse
     if (e.button === 0) {
       // Left click — light attack
       this.lightAttackRequested = true;
@@ -215,6 +230,7 @@ export class CombatController {
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
+    if (this.player.uiInputLocked) return; // dialogue/menu owns the keyboard
     // Tab: toggle lock-on
     if (e.code === 'Tab') {
       e.preventDefault();

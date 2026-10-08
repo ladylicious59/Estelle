@@ -83,6 +83,85 @@
       margin-top: 2px;
     }
 
+    /* Mana bar */
+    #mana-bar {
+      width: 280px;
+      height: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    #mana-fill {
+      width: 100%;
+      height: 100%;
+      background: #4488FF;
+      border-radius: 3px;
+      transition: width 0.15s ease-out, background-color 0.3s;
+    }
+
+    #mana-label {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      margin-top: 2px;
+    }
+
+    /* Spell bar */
+    #spell-bar {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      gap: 8px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .spell-slot {
+      width: 64px;
+      background: rgba(0, 0, 0, 0.55);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 6px;
+      padding: 4px;
+      text-align: center;
+      transition: border-color 0.2s, opacity 0.2s;
+    }
+
+    .spell-slot .spell-key {
+      color: #FFCC66;
+      font-size: 14px;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .spell-slot .spell-status {
+      color: #66FF88;
+      font-size: 12px;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      min-height: 15px;
+    }
+
+    .spell-slot .spell-name {
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .spell-slot.on-cooldown {
+      border-color: rgba(255, 120, 40, 0.6);
+      opacity: 0.75;
+    }
+
+    .spell-slot.on-cooldown .spell-status {
+      color: #FFAA55;
+    }
+
     /* Damage flash overlay */
     #damage-flash {
       position: absolute;
@@ -101,6 +180,32 @@
       transition: background 0s;
     }
 
+    /* Combat indicator */
+    #combat-indicator {
+      position: absolute;
+      top: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #FF3333;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 5px #260000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 12;
+    }
+
+    #combat-indicator.combat-active {
+      opacity: 1;
+      animation: combat-pulse 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes combat-pulse {
+      from { transform: translateX(-50%) scale(1); }
+      to { transform: translateX(-50%) scale(1.08); }
+    }
+
     /* Controls hint */
     #controls-hint {
       position: absolute;
@@ -117,23 +222,240 @@
       padding: 8px 16px;
       border-radius: 20px;
     }
+
+    /* --- NPC interaction prompt --- */
+    #interact-prompt {
+      position: absolute;
+      bottom: 150px;
+      left: 50%;
+      transform: translateX(-50%) translateY(6px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      background: rgba(0, 0, 0, 0.62);
+      border: 2px solid rgba(255, 204, 102, 0.45);
+      border-radius: 24px;
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      opacity: 0;
+      pointer-events: none;
+      cursor: pointer;
+      transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+      z-index: 14;
+    }
+
+    #interact-prompt.prompt-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    #interact-prompt .key-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 6px;
+      background: rgba(255, 204, 102, 0.18);
+      border: 1px solid rgba(255, 204, 102, 0.7);
+      border-radius: 5px;
+      color: #FFCC66;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    #interact-prompt .prompt-action {
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    #interact-prompt #interact-target {
+      color: #FFE9B8;
+      font-weight: 600;
+    }
+
+    /* --- Dialogue overlay --- */
+    #dialogue-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 150px;
+      z-index: 18;
+    }
+
+    #dialogue-overlay.dialogue-visible {
+      display: flex;
+    }
+
+    #dialogue-box {
+      width: min(780px, 88vw);
+      background: rgba(6, 5, 10, 0.82);
+      border: 2px solid rgba(255, 204, 102, 0.35);
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(255, 170, 60, 0.05);
+      padding: 16px 22px 14px;
+      backdrop-filter: blur(3px);
+    }
+
+    #dialogue-name {
+      text-align: center;
+      color: #FFCC66;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 204, 102, 0.22);
+    }
+
+    #dialogue-text {
+      margin-top: 14px;
+      min-height: 72px;
+      color: rgba(255, 255, 255, 0.93);
+      font-size: 17px;
+      line-height: 1.62;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+    }
+
+    #dialogue-text em {
+      color: #E8D9B0;
+      font-style: italic;
+    }
+
+    #dialogue-choices {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    #dialogue-choices:empty {
+      margin-top: 0;
+    }
+
+    .dialogue-choice {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      font: inherit;
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.75);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 6px;
+      padding: 9px 14px;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.12s;
+    }
+
+    .dialogue-choice .choice-marker {
+      color: #FFCC66;
+      opacity: 0;
+      transition: opacity 0.12s;
+    }
+
+    .dialogue-choice.selected {
+      color: #FFFFFF;
+      background: rgba(255, 204, 102, 0.14);
+      border-color: rgba(255, 204, 102, 0.75);
+      transform: translateX(4px);
+    }
+
+    .dialogue-choice.selected .choice-marker {
+      opacity: 1;
+    }
+
+    #dialogue-continue {
+      margin-top: 10px;
+      text-align: right;
+      color: rgba(255, 204, 102, 0.85);
+      font-size: 11px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    #dialogue-continue.continue-visible {
+      opacity: 1;
+      animation: continue-pulse 1.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes continue-pulse {
+      from { opacity: 0.55; }
+      to { opacity: 1; }
+    }
   </style>
 </head>
 <body>
   <div id="app">
     <div id="damage-flash"></div>
+    <div id="combat-indicator">⚔ COMBAT</div>
+    <div id="dialogue-overlay">
+      <div id="dialogue-box">
+        <div id="dialogue-name">NPC</div>
+        <div id="dialogue-body">
+          <div id="dialogue-text"></div>
+          <div id="dialogue-choices"></div>
+        </div>
+        <div id="dialogue-continue">Press E / Click to continue</div>
+      </div>
+    </div>
+    <div id="interact-prompt">
+      <span class="key-badge">E</span>
+      <span class="prompt-action">Talk</span>
+      <span id="interact-target">NPC</span>
+    </div>
     <div id="controls-hint">
-      WASD = Move &bull; Shift = Sprint &bull; Space = Jump &bull; Double-tap = Dodge &bull; Scroll = Zoom &bull; LMB = Light Atk &bull; RMB/E = Heavy Atk &bull; Tab = Lock-On
+      WASD = Move &bull; Shift = Sprint &bull; Space = Jump &bull; Double-tap = Dodge &bull; Scroll = Zoom &bull; LMB = Light Atk &bull; RMB = Heavy Atk &bull; E = Talk / Heavy Atk &bull; Tab = Lock-On &bull; 1-4 = Fire Spells
     </div>
     <div id="hud">
       <div id="hp-bar">
         <div id="hp-fill"></div>
       </div>
       <div id="hp-label">100/100</div>
+      <div id="mana-bar">
+        <div id="mana-fill"></div>
+      </div>
+      <div id="mana-label">MP: 100/100</div>
       <div id="stamina-bar">
         <div id="stamina-fill"></div>
       </div>
       <div id="state-label">IDLE</div>
+    </div>
+    <div id="spell-bar">
+      <div class="spell-slot" id="spell-slot-firebolt">
+        <div class="spell-key">1</div>
+        <div class="spell-status" id="spell-status-firebolt">✓</div>
+        <div class="spell-name">Firebolt</div>
+      </div>
+      <div class="spell-slot" id="spell-slot-flamewave">
+        <div class="spell-key">2</div>
+        <div class="spell-status" id="spell-status-flamewave">✓</div>
+        <div class="spell-name">Flame Wave</div>
+      </div>
+      <div class="spell-slot" id="spell-slot-inferno">
+        <div class="spell-key">3</div>
+        <div class="spell-status" id="spell-status-inferno">✓</div>
+        <div class="spell-name">Inferno</div>
+      </div>
+      <div class="spell-slot" id="spell-slot-phoenixdash">
+        <div class="spell-key">4</div>
+        <div class="spell-status" id="spell-status-phoenixdash">✓</div>
+        <div class="spell-name">Phoenix Dash</div>
+      </div>
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>

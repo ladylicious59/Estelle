@@ -2,6 +2,12 @@ import * as THREE from 'three';
 import { Player } from '../player/Player';
 import { Village } from '../world/Village';
 import { Goblin } from '../enemies/Goblin';
+import { DamageNumbers } from '../ui/DamageNumbers';
+import { NpcManager } from '../npc/NpcManager';
+import { buildCaptainRennModel } from '../npc/models';
+import { CAPTAIN_RENN_TREE } from '../dialogue/data/renn';
+import { DialogueController } from '../dialogue/DialogueController';
+import { GameFlags } from '../state/GameFlags';
 
 export class Game {
   private scene: THREE.Scene;
@@ -12,6 +18,11 @@ export class Game {
   private animFrameId: number = 0;
   private goblins: Goblin[] = [];
 
+  // NPCs & dialogue
+  public npcs: NpcManager;
+  public flags: GameFlags;
+  public dialogue: DialogueController;
+
   // UI elements
   private staminaBar: HTMLElement;
   private staminaFill: HTMLElement;
@@ -19,6 +30,9 @@ export class Game {
   private hpBar: HTMLElement;
   private hpFill: HTMLElement;
   private hpLabel: HTMLElement;
+  private manaFill: HTMLElement;
+  private manaLabel: HTMLElement;
+  private combatIndicator: HTMLElement;
 
   constructor() {
     // Scene
@@ -51,8 +65,19 @@ export class Game {
     // Spawn goblins
     this.spawnGoblins();
 
-    // Pass goblins to combat controller
+    // Pass goblins to combat + magic controllers
     this.player.combatController.setGoblins(this.goblins);
+    this.player.fireMagic.setGoblins(this.goblins);
+
+    // Game state (quests, unlocked elements) that dialogue reads from
+    this.flags = new GameFlags();
+
+    // NPCs
+    this.npcs = new NpcManager(this.scene);
+    this.spawnNpcs();
+
+    // Dialogue: proximity prompt + conversation UI
+    this.dialogue = new DialogueController(this.npcs, this.player, this.flags);
 
     // UI
     this.staminaBar = document.getElementById('stamina-bar')!;
@@ -61,11 +86,18 @@ export class Game {
     this.hpBar = document.getElementById('hp-bar')!;
     this.hpFill = document.getElementById('hp-fill')!;
     this.hpLabel = document.getElementById('hp-label')!;
+    this.manaFill = document.getElementById('mana-fill')!;
+    this.manaLabel = document.getElementById('mana-label')!;
+    this.combatIndicator = document.getElementById('combat-indicator')!;
+    DamageNumbers.initialize(this.player.camera);
 
     // Player state logging
     this.player.setOnStateChange((oldState, newState) => {
       this.updateStateLabel();
     });
+
+    // Dev hook: expose the game for console debugging (e.g. `window.__game.player.position`)
+    (window as unknown as Record<string, unknown>).__game = this;
 
     // Resize handler
     window.addEventListener('resize', this.onResize);
@@ -89,13 +121,17 @@ export class Game {
       // Update village (smoke animations)
       this.village.update(deltaTime);
 
+      // Update NPCs, proximity prompt and the dialogue box
+      this.dialogue.update(deltaTime);
+
       // Update goblins
       for (const goblin of this.goblins) {
         goblin.update(deltaTime);
       }
 
-      // Update UI
+      // Update UI and floating combat feedback
       this.updateUI();
+      DamageNumbers.update(deltaTime);
 
       // Render from player camera
       this.renderer.render(this.scene, this.player.camera);
@@ -122,6 +158,10 @@ export class Game {
 
     // Update state label (combat takes priority)
     this.updateStateLabel();
+    if (this.combatIndicator) {
+      const inCombat = this.goblins.some((goblin) => goblin.isAlive && (goblin.state === 'chase' || goblin.state === 'attack'));
+      this.combatIndicator.classList.toggle('combat-active', inCombat);
+    }
 
     // HP bar
     if (this.hpFill) {
@@ -138,6 +178,34 @@ export class Game {
     if (this.hpLabel) {
       this.hpLabel.textContent = `${this.player.hp}/${this.player.maxHp}`;
     }
+
+    // Mana bar
+    if (this.manaFill) {
+      const manaPct = this.player.getManaPercent();
+      this.manaFill.style.width = `${manaPct * 100}%`;
+      if (manaPct < 0.25) {
+        this.manaFill.style.backgroundColor = '#3344CC';
+      } else {
+        this.manaFill.style.backgroundColor = '#4488FF';
+      }
+    }
+    if (this.manaLabel) {
+      this.manaLabel.textContent = `MP: ${Math.floor(this.player.mana)}/${this.player.maxMana}`;
+    }
+
+    // Spell cooldown indicators
+    for (const spell of this.player.fireMagic.getSpellStatuses()) {
+      const statusEl = document.getElementById(`spell-status-${spell.id}`);
+      const slotEl = document.getElementById(`spell-slot-${spell.id}`);
+      if (!statusEl || !slotEl) continue;
+      if (spell.cooldown > 0) {
+        statusEl.textContent = `${spell.cooldown.toFixed(1)}s`;
+        slotEl.classList.add('on-cooldown');
+      } else {
+        statusEl.textContent = '✓';
+        slotEl.classList.remove('on-cooldown');
+      }
+    }
   }
 
   private updateStateLabel(): void {
@@ -148,6 +216,23 @@ export class Game {
     } else {
       this.stateLabel.textContent = this.player.state.toUpperCase();
     }
+  }
+
+  /**
+   * Captain Renn keeps his post at the north gate (Emberwood dialogue doc 1.4),
+   * leaning on the watch post with the quest board a few paces away.
+   */
+  private spawnNpcs(): void {
+    this.npcs.add({
+      id: 'captain_renn',
+      name: 'Captain Renn',
+      promptLabel: 'Captain Renn',
+      position: new THREE.Vector3(2.5, 0, 19.8),
+      restYaw: Math.PI, // looking back down the north road
+      interactionRadius: 3.8,
+      dialogue: CAPTAIN_RENN_TREE,
+      buildModel: buildCaptainRennModel,
+    });
   }
 
   private spawnGoblins(): void {
@@ -192,6 +277,9 @@ export class Game {
     if (this.animFrameId) {
       cancelAnimationFrame(this.animFrameId);
     }
+    DamageNumbers.dispose();
+    this.dialogue.dispose();
+    this.npcs.dispose();
     this.player.dispose();
     for (const goblin of this.goblins) {
       goblin.dispose();
