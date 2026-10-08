@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Player } from '../player/Player';
 import { Village } from '../world/Village';
+import { Goblin } from '../enemies/Goblin';
 
 export class Game {
   private scene: THREE.Scene;
@@ -9,11 +10,15 @@ export class Game {
   private village: Village;
   private clock: THREE.Clock;
   private animFrameId: number = 0;
+  private goblins: Goblin[] = [];
 
   // UI elements
   private staminaBar: HTMLElement;
   private staminaFill: HTMLElement;
   private stateLabel: HTMLElement;
+  private hpBar: HTMLElement;
+  private hpFill: HTMLElement;
+  private hpLabel: HTMLElement;
 
   constructor() {
     // Scene
@@ -43,16 +48,23 @@ export class Game {
     this.player = new Player(this.scene);
     this.player.position.set(0, 0, -22); // spawn near Player's House
 
+    // Spawn goblins
+    this.spawnGoblins();
+
+    // Pass goblins to combat controller
+    this.player.combatController.setGoblins(this.goblins);
+
     // UI
     this.staminaBar = document.getElementById('stamina-bar')!;
     this.staminaFill = document.getElementById('stamina-fill')!;
     this.stateLabel = document.getElementById('state-label')!;
+    this.hpBar = document.getElementById('hp-bar')!;
+    this.hpFill = document.getElementById('hp-fill')!;
+    this.hpLabel = document.getElementById('hp-label')!;
 
     // Player state logging
     this.player.setOnStateChange((oldState, newState) => {
-      if (this.stateLabel) {
-        this.stateLabel.textContent = newState.toUpperCase();
-      }
+      this.updateStateLabel();
     });
 
     // Resize handler
@@ -76,6 +88,11 @@ export class Game {
 
       // Update village (smoke animations)
       this.village.update(deltaTime);
+
+      // Update goblins
+      for (const goblin of this.goblins) {
+        goblin.update(deltaTime);
+      }
 
       // Update UI
       this.updateUI();
@@ -102,6 +119,73 @@ export class Game {
       this.staminaFill.style.backgroundColor = '#FFD700';
       this.staminaFill.classList.remove('flashing');
     }
+
+    // Update state label (combat takes priority)
+    this.updateStateLabel();
+
+    // HP bar
+    if (this.hpFill) {
+      const hpPct = this.player.hp / this.player.maxHp;
+      this.hpFill.style.width = `${hpPct * 100}%`;
+      if (hpPct < 0.25) {
+        this.hpFill.style.backgroundColor = '#FF4444';
+      } else if (hpPct < 0.5) {
+        this.hpFill.style.backgroundColor = '#FFAA00';
+      } else {
+        this.hpFill.style.backgroundColor = '#44CC44';
+      }
+    }
+    if (this.hpLabel) {
+      this.hpLabel.textContent = `${this.player.hp}/${this.player.maxHp}`;
+    }
+  }
+
+  private updateStateLabel(): void {
+    if (!this.stateLabel) return;
+    const combatLabel = this.player.combatController.getCombatStateLabel();
+    if (combatLabel !== 'IDLE') {
+      this.stateLabel.textContent = combatLabel;
+    } else {
+      this.stateLabel.textContent = this.player.state.toUpperCase();
+    }
+  }
+
+  private spawnGoblins(): void {
+    // Goblin 1: near north path, patrol state with 2 waypoints
+    const goblin1 = new Goblin(
+      this.player,
+      this.scene,
+      new THREE.Vector3(15, 0, -15),
+      'patrol',
+      [
+        new THREE.Vector3(15, 0, -15),
+        new THREE.Vector3(18, 0, -10),
+        new THREE.Vector3(12, 0, -8),
+      ],
+    );
+    this.goblins.push(goblin1);
+
+    // Goblin 2: near east forest edge, idle state
+    const goblin2 = new Goblin(
+      this.player,
+      this.scene,
+      new THREE.Vector3(-12, 0, -8),
+      'idle',
+    );
+    this.goblins.push(goblin2);
+
+    // Goblin 3: near village square, patrol state with 2 waypoints
+    const goblin3 = new Goblin(
+      this.player,
+      this.scene,
+      new THREE.Vector3(8, 0, 10),
+      'patrol',
+      [
+        new THREE.Vector3(8, 0, 10),
+        new THREE.Vector3(12, 0, 8),
+      ],
+    );
+    this.goblins.push(goblin3);
   }
 
   dispose(): void {
@@ -109,6 +193,10 @@ export class Game {
       cancelAnimationFrame(this.animFrameId);
     }
     this.player.dispose();
+    for (const goblin of this.goblins) {
+      goblin.dispose();
+    }
+    this.goblins = [];
     window.removeEventListener('resize', this.onResize);
   }
 }
